@@ -9,31 +9,9 @@ A smart IoT-based system designed to **monitor and predict the Remaining Useful 
 ## 📌 Project Objectives
 
 - Measure car battery health using key indicators (Voltage, Current, Temperature, Humidity)
-- Predict **Remaining Useful Life (RUL)** using a trained ML model (R² score = 99.89%)
+- Predict **Remaining Useful Life (RUL)** using a trained ML model
 - Enable **real-time monitoring** via Arduino IoT Cloud
 - Promote **preventive maintenance** to reduce battery failure risks
-
----
-
-## 🧠 How It Works
-
-1. **Sensor Integration**  
-   ESP32 board collects real-time values from:
-   - Voltage Sensor
-   - Current Sensor
-   - Humidity Sensor
-   - Temperature Sensor
-
-2. **Data Transmission**  
-   The ESP32 sends sensor data to the **Arduino IoT Cloud dashboard** using MQTT.
-
-3. **Machine Learning Model**  
-   - Jupyter Notebook (`iot_ml.ipynb`) loads sensor data (`Iot.csv`)
-   - Random Forest Regressor is trained to estimate battery health/RUL
-   - Achieves **R² score of 99.89%**, ensuring highly reliable predictions
-
-4. **Insight Delivery**  
-   Based on predictions, the system provides actionable insights for battery replacement/servicing.
 
 ---
 
@@ -50,9 +28,25 @@ A smart IoT-based system designed to **monitor and predict the Remaining Useful 
 │   ├── Picture1.png               
 │   ├── Picture2.jpg               
 │   └── Picture3.jpg               
-├── README.md                      // This overview document
-└── iot_ml.ipynb                   // Jupyter Notebook for IoT data analysis and machine learning
+├── README.md                      # This overview document
+└── iot_ml.ipynb                   # Jupyter Notebook for IoT data analysis and machine learning
 ```
+
+---
+
+## **Project Workflow**
+1. **Dataset**:
+   - Data includes features such as **temperature**, **discharge rate**, and **current**.
+   - Historical battery performance metrics used for training and testing.
+
+2. **Machine Learning Pipeline**:
+   - **Data Preprocessing**: Cleaned and prepared the dataset for modeling.
+   - **Model Building**: Trained a **Random Forest Regressor** to predict RUL.
+   - **Evaluation**: Assessed model accuracy using metrics like **Mean Absolute Error (MAE)** and **R² Score**.
+
+3. **Output**:
+   - Predicts the RUL for a given set of battery parameters.
+   - Provides predictions as a single output or batch.
 
 ---
 
@@ -67,38 +61,6 @@ A smart IoT-based system designed to **monitor and predict the Remaining Useful 
   - Arduino IoT Cloud
   - Python (Jupyter Notebook)
   - Random Forest Regression (via Scikit-learn)
-
----
-
-## 🚀 Setup & Deployment
-
-### 🔌 ESP32 Setup
-
-1. Connect all sensors to the ESP32 board.
-2. Open `Untitled_oct01a.ino` in Arduino IDE.
-3. Update WiFi credentials in `arduino_secrets.h`.
-4. Configure your device in Arduino IoT Cloud and copy the credentials to `thingProperties.h`.
-5. Upload the sketch to ESP32 and verify data flow in the Arduino IoT Cloud dashboard.
-
-### 📊 Machine Learning Setup
-
-1. Open `iot_ml.ipynb` using Jupyter Notebook.
-2. Install dependencies:  
-   ```bash
-   pip install pandas numpy scikit-learn matplotlib
-   ```
-3. Load `Iot.csv`, explore trends, and train the Random Forest model.
-4. Get predicted RUL and health score visualizations.
-
----
-
-## ✅ Model Performance
-
-- **Algorithm**: Random Forest Regressor
-- **Feature Inputs**: Voltage, Current, Humidity, Temperature
-- **Target Output**: Battery Health (Remaining Useful Life)
-- **R² Score**: **0.9989** (99.89%)  
-  → Indicates **very strong correlation** between sensor data and predicted battery life
 
 ---
 
