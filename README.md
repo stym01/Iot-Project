@@ -39,13 +39,19 @@ A smart IoT-based system designed to **monitor and predict the Remaining Useful 
 
 ## 📁 Repository Overview
 
+
 ```
-├── Untitled_oct01a.ino       # Arduino code for ESP32 sensor reading + cloud publishing
-├── arduino_secrets.h         # WiFi + device credentials (excluded in GitHub for security)
-├── thingProperties.h         # AWS/Arduino IoT Thing setup & configuration
-├── Iot.csv                   # Labeled sensor data for ML training
-├── iot_ml.ipynb              # Jupyter notebook for ML training & predictions
-├── sketch.json               # Arduino Cloud metadata
+├── Iot Codes/
+│   ├── Untitled_oct01a.ino        # Arduino code for ESP32 sensor reading + cloud publishing
+│   ├── arduino_secrets.h          # WiFi + device credentials
+│   ├── sketch.json                # Configuration file for Arduino sketch
+│   └── thingProperties.h          # Arduino IoT Thing setup & configuration
+├── Screenshots/
+│   ├── Picture1.png               
+│   ├── Picture2.jpg               
+│   └── Picture3.jpg               
+├── README.md                      // This overview document
+└── iot_ml.ipynb                   // Jupyter Notebook for IoT data analysis and machine learning
 ```
 
 ---
