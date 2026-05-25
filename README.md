@@ -1,116 +1,65 @@
-# 🔋 Battery Health Optimization Using IoT and Machine Learning
+# TinyML Battery Health Monitor & Virtual Cranking Estimator
 
-A smart IoT-based system designed to **monitor and predict the Remaining Useful Life (RUL)** of a car battery using real-time sensor data and machine learning (Random Forest Regression). The solution not only gathers live battery metrics but also offers **proactive maintenance insights** to optimize performance and extend battery lifespan.
-
-> 🛠️ Built with: ESP32 · Real-time IoT Sensors · Arduino IoT Cloud · Jupyter ML
-
----
-
-## 📌 Project Objectives
-
-- Measure car battery health using key indicators (Voltage, Current, Temperature, Humidity)
-- Predict **Remaining Useful Life (RUL)** using a trained ML model (R² score = 99.89%)
-- Enable **real-time monitoring** via Arduino IoT Cloud
-- Promote **preventive maintenance** to reduce battery failure risks
+![Language](https://img.shields.io/badge/language-Python%20%7C%20C%2B%2B-blue)
+![Platform](https://img.shields.io/badge/platform-ESP32%20%7C%20Arduino-orange)
+![Machine Learning](https://img.shields.io/badge/Machine%20Learning-RPNN%20%7C%20Random%20Forest-success)
 
 ---
 
-## 🧠 How It Works
+## Table of Contents
+&nbsp;[Introduction](#introduction)  <br/>
+&nbsp;[Why I built this](#why-i-built-this) <br/> 
+&nbsp;[Key Features](#key-features)  <br/> 
+&nbsp;[System Architecture](#system-architecture)  <br/> 
+&nbsp;[Real-Time Dashboard](#real-time-dashboard)  <br/> 
+&nbsp;[Model Performance](#model-performance)  <br/> 
+&nbsp;[Build Instructions](#build-instructions)  <br/> 
 
-1. **Sensor Integration**  
-   ESP32 board collects real-time values from:
-   - Voltage Sensor
-   - Current Sensor
-   - Humidity Sensor
-   - Temperature Sensor
+## Introduction
+In this project, I built an IoT-based edge machine learning system to predict the **State of Charge (SOC)**, **State of Health (SOH)**, and **Time-To-Empty (TTE)** for standard 12V Lead-Acid batteries. *(Note: The research paper detailing this work has been accepted at the NE-IECCE 2026 conference and will be published in IEEE).*
 
-2. **Data Transmission**  
-   The ESP32 sends sensor data to the **Arduino IoT Cloud dashboard** using MQTT.
+Instead of relying on simple voltage readings (which are often misleading and don't reflect internal battery aging), I implemented a Coulomb Counting method to establish a highly accurate `True_SoC` baseline. I then collected a massive dataset using IoT sensors and trained various machine learning models—eventually leading to a novel **Residual-Physics Neural Network (RPNN)**—to predict battery health directly on an ESP32 microcontroller without needing cloud inference.
 
-3. **Machine Learning Model**  
-   - Jupyter Notebook (`iot_ml.ipynb`) loads sensor data (`Iot.csv`)
-   - Random Forest Regressor is trained to estimate battery health/RUL
-   - Achieves **R² score of 99.89%**, ensuring highly reliable predictions
+This repository contains the data processing notebooks, the baseline model benchmarks (Random Forest, XGBoost, GRU, etc.), and the physical logic for failure prediction.
 
-4. **Insight Delivery**  
-   Based on predictions, the system provides actionable insights for battery replacement/servicing.
+## Why I built this?
+Even the most advanced Electric Vehicles (EVs) rely on the trusty 12V lead-acid battery to run critical safety systems. The most common method for checking their health relies solely on voltage—but checking voltage alone is dangerously unreliable. A battery can show a "good" reading even while suffering from severe internal aging. By the time the voltage drops, it's often too late, and your car simply refuses to start.
 
----
+Furthermore, most existing machine learning solutions for battery health focus entirely on Lithium-ion batteries, or they rely on computationally intensive algorithms that stream data to the cloud. If you're driving in an area with poor cell reception, a cloud-based system becomes useless. I wanted to build a predictive, offline system that runs entirely on edge hardware (like an ESP32) to warn you of a failure *before* you get stranded.
 
-## 📁 Repository Overview
+## Key Features
+* **Custom TinyML Deployment Pipeline**: Instead of relying on automated 3rd-party platforms, I built a custom deployment pipeline from scratch. I converted the TensorFlow PINN model into a **Full INT8 Quantized TFLite** model (shrinking its footprint by 75%), extracted it into a raw C++ byte array using `xxd`, and deployed it to run natively on the ESP32 using `TensorFlowLite_ESP32`. This allows the complex physics-informed model to run entirely offline.
+* **State of Charge (SOC) Prediction**: Predicts SOC to tell the user about the percentage left in their battery.
+* **State of Health (SOH) Estimation**: Detects permanent battery degradation by comparing the currently measured capacity against the manufacturer's rated capacity, identifying whether a battery is truly failing or just temporarily discharged.
+* **Virtual Cranking Detection**: By calculating internal resistance ($\Delta V / \Delta I$) on the fly, the code mathematically simulates a sudden 200A engine-start load. If the predicted voltage drops below the 7.5V ECU cutoff, it sends a pre-emptive warning.
+* **Vampire Drain Alerting**: The system monitors quiescent current when the engine is off. If it detects abnormal current (like a light left on or a short circuit), it immediately alerts you to prevent an irreversible overnight discharge.
+* **Dynamic Time-to-Empty (TTE)**: Calculates exactly how many hours and minutes of battery life you have left based on a moving average of the current load.
+* **Deep Sleep Optimization**: To make sure the monitoring system doesn't *become* a parasitic drain itself, I designed it to wake up, run the ML inference, send the telemetry to the cloud, and go back to an ultra-low-power sleep state.
 
-```
-├── Untitled_oct01a.ino       # Arduino code for ESP32 sensor reading + cloud publishing
-├── arduino_secrets.h         # WiFi + device credentials (excluded in GitHub for security)
-├── thingProperties.h         # AWS/Arduino IoT Thing setup & configuration
-├── Iot.csv                   # Labeled sensor data for ML training
-├── iot_ml.ipynb              # Jupyter notebook for ML training & predictions
-├── sketch.json               # Arduino Cloud metadata
-```
+## System Architecture
 
----
+Here is a high-level look at how the sensor data flows into the ESP32, gets processed by the TinyML engine, and alerts the user:
 
-## 🛠️ Hardware & Software Stack
+![Architecture Diagram](./Architecture.png)
 
-- **Hardware:**
-  - ESP32 microcontroller
-  - Voltage & Current sensors
-  - DHT11 (Humidity + Temperature)
-- **Software:**
-  - Arduino IDE
-  - Arduino IoT Cloud
-  - Python (Jupyter Notebook)
-  - Random Forest Regression (via Scikit-learn)
+## Real-Time Dashboard
 
----
+I connected the ESP32 directly to the Arduino IoT Cloud so I could monitor everything on the go. The resulting real-time dashboard lets you pull out your phone and instantly check your battery's SOC, SOH, and Time-to-Empty. It also pushes live alerts for Virtual Cranking and Vampire Drain directly to your screen.
 
-## 🚀 Setup & Deployment
+*Note: The machine learning inference happens **100% offline** on the edge device itself. The internet connection is strictly used for pushing telemetry to this dashboard. By simply integrating a small screen (like an OLED display) with the ESP32, this entire system can run fully offline without any network dependency!*
 
-### 🔌 ESP32 Setup
+![Live Dashboard](./dashboard.jpg)
 
-1. Connect all sensors to the ESP32 board.
-2. Open `Untitled_oct01a.ino` in Arduino IDE.
-3. Update WiFi credentials in `arduino_secrets.h`.
-4. Configure your device in Arduino IoT Cloud and copy the credentials to `thingProperties.h`.
-5. Upload the sketch to ESP32 and verify data flow in the Arduino IoT Cloud dashboard.
+## Model Performance
 
-### 📊 Machine Learning Setup
+I collected a custom dataset (`iot.csv`) containing nearly 20,000 samples of Voltage, Current, and Temperature by continuously discharging a 12V 7Ah battery. I tested multiple algorithms to see which one performed best before deploying to the edge:
 
-1. Open `iot_ml.ipynb` using Jupyter Notebook.
-2. Install dependencies:  
-   ```bash
-   pip install pandas numpy scikit-learn matplotlib
-   ```
-3. Load `Iot.csv`, explore trends, and train the Random Forest model.
-4. Get predicted RUL and health score visualizations.
+| Algorithm | R² Score | MAE | MSE |
+| :--- | :---: | :---: | :---: |
+| **RPNN (My Physics-Informed Model)** | **0.9970** | **0.6815** | **0.6408** |
+| Gradient Boosting | 0.9846 | 2.5978 | 13.8933 |
+| XGBoost | 0.9846 | 2.5696 | 13.8817 |
+| Random Forest | 0.9845 | 2.5630 | 13.9292 |
+| Linear Regression | 0.7357 | 11.9984| 238.0323 |
 
----
-
-## ✅ Model Performance
-
-- **Algorithm**: Random Forest Regressor
-- **Feature Inputs**: Voltage, Current, Humidity, Temperature
-- **Target Output**: Battery Health (Remaining Useful Life)
-- **R² Score**: **0.9989** (99.89%)  
-  → Indicates **very strong correlation** between sensor data and predicted battery life
-
----
-
-## 💡 Future Improvements
-
-- Deploy ML model directly on the ESP32 using TinyML
-- Add mobile app dashboard using Flutter or React Native
-- Store long-term logs in Firebase / AWS for trend analysis
-- Add alert system (email/SMS) for low battery warnings
-
----
-
-## 🤝 Contributing
-
-Pull requests and feedback are always welcome! If you'd like to suggest new features or fixes, feel free to fork the repo or open an issue.
-
----
-
-## 🙌 Closing Note
-
-Thank you for exploring this project! If you found it insightful or inspiring, feel free to ⭐ the repo and share your thoughts. Let’s keep building cool tech that makes everyday things smarter!
+> *Note: The RPNN significantly outperformed the baselines because it actually embeds the fundamental physical equations of the battery directly into its loss function!*
