@@ -16,11 +16,13 @@
 &nbsp;[Build Instructions](#build-instructions)  <br/> 
 
 ## Introduction
-In this project, I built an IoT-based edge machine learning system to predict the **State of Charge (SOC)**, **State of Health (SOH)**, and **Time-To-Empty (TTE)** for standard 12V Lead-Acid batteries. *(Note: The research paper detailing this work has been accepted at the NE-IECCE 2026 conference and will be published in IEEE).*
+In this project, I built an IoT-based edge machine learning system to predict the **State of Charge (SOC)**, **State of Health (SOH)**, and **Time-To-Empty (TTE)** for standard 12V Lead-Acid batteries. *(The research paper on this work, ["SOC and SOH Estimation of Lead-Acid Battery using IoT and Residual-Physics Neural Network"](https://ieeexplore.ieee.org/abstract/document/11665960), is published in IEEE NE-IECCE 2026; I am the second author.)*
 
 Instead of relying on simple voltage readings (which are often misleading and don't reflect internal battery aging), I implemented a Coulomb Counting method to establish a highly accurate `True_SoC` baseline. I then collected a massive dataset using IoT sensors and trained various machine learning models—eventually leading to a novel **Residual-Physics Neural Network (RPNN)**—to predict battery health directly on an ESP32 microcontroller without needing cloud inference.
 
-This repository contains the data processing notebooks, the baseline model benchmarks (Random Forest, XGBoost, GRU, etc.), and the physical logic for failure prediction.
+This repository contains the ESP32 sensor and Arduino IoT Cloud firmware, the system architecture and screenshots of the dashboard. The full method and results are in the paper.
+
+📝 **Full write-up:** [Physics-Informed TinyML on an ESP32: Estimating Battery SOC and SOH](https://www.satyamk.dev/blog/tinyml-esp32-battery-soc-soh-physics-informed-neural-network).
 
 ## Why I built this?
 Even the most advanced Electric Vehicles (EVs) rely on the trusty 12V lead-acid battery to run critical safety systems. The most common method for checking their health relies solely on voltage—but checking voltage alone is dangerously unreliable. A battery can show a "good" reading even while suffering from severe internal aging. By the time the voltage drops, it's often too late, and your car simply refuses to start.
@@ -63,3 +65,8 @@ I collected a custom dataset (`iot.csv`) containing nearly 20,000 samples of Vol
 | Linear Regression | 0.7357 | 11.9984| 238.0323 |
 
 > *Note: The RPNN significantly outperformed the baselines because it actually embeds the fundamental physical equations of the battery directly into its loss function!*
+
+
+---
+
+Built by [Satyam Kesharwani](https://www.satyamk.dev) · [LinkedIn](https://www.linkedin.com/in/stym01/) · [Engineering blog](https://www.satyamk.dev/blog)
